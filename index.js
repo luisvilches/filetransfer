@@ -11,13 +11,12 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const formidable = require('formidable');
-
+const Utils = require("./uploaders");
+const request = require("request");
 
 
 app.use(cors());
 app.use(express.static('public'));
-//app.use(express.static(path.join( __dirname , '/uploads')));
-
 app.use('/files', express.static('public/uploads'));
 
 app.get('/', (req,res) => {
@@ -34,19 +33,41 @@ app.post('/upload', (req,res) => {
         let name = file.name;
         let rename = name.replace(/ /g,"-").toLowerCase();
         fs.rename(file.path, path.join(form.uploadDir, rename));
-        obj.name = rename;
-        obj.url = '/files/' + rename;
+
+        request({
+            method: 'POST',
+            url: 'https://www.googleapis.com/urlshortener/v1/url',
+            qs: {
+              'key': 'AIzaSyC1fRgo2OZP0t_QOou3LdIne1UYWtnURA8',
+            },
+            body: {
+              'longUrl': 'https://filetransfersomarcasoft.herokuapp.com/' + 'files/' + rename,
+            },
+            json: true,
+          }, (err, response, body) => {
+            if (err) {
+              console.error(err)
+            }
+          
+            if (response.statusCode === 200 || response.statusCode === 304) {
+              // Accedemos a nuestra URL corta a través de body.id
+              console.log(body.id)
+              obj.name = rename;
+              obj.url = body.id
+            }
+          })
     });
     form.on('error', err => {
         console.log('Error: ', err);
     });
 
     form.on('end', () => {
-        res.json(obj);
+        setTimeout(function(){
+            res.json(obj);
+        },2000)
     });
     form.parse(req);
-})
-
+});
 
 app.listen(config.server.port, err => {
     if(err){

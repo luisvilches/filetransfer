@@ -32,7 +32,9 @@ function sendfile(){
                 success: function(data){
                     console.log('La carga de archivos se ha realizado con éxito' + data);
                     let datos = JSON.stringify(data);
-                    console.log(datos);
+                    console.log(data);
+                    var result = document.getElementById("result");
+                    result.innerHTML = `Link de descarga: <a href="${data.url}">${data.url}</a>`
                 },
                 xhr: function() {
                     // creamos un objeto XMLHttpRequest
